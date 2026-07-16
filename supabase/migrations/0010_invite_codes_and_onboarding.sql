@@ -152,8 +152,11 @@ $$;
 -- Peek at a code without exposing the invite_codes table to joining members.
 -- Raises a distinct message per failure reason so the client can show a
 -- recoverable error alongside the "Call your location leader" fallback (§5).
+-- Also returns the minting leader's name + phone so the pending-approval screen
+-- can offer the mandated "Call your location leader" fallback with a real number
+-- (§5). The invitee already holds the code that leader gave them.
 create or replace function public.validate_invite_code(p_code text)
-returns table (location_id uuid, location_name text)
+returns table (location_id uuid, location_name text, leader_name text, leader_phone text)
 language plpgsql
 stable
 security definer
@@ -176,8 +179,10 @@ begin
   end if;
 
   return query
-    select rec.location_id, l.name
-    from public.locations l where l.id = rec.location_id;
+    select rec.location_id,
+           (select l.name from public.locations l where l.id = rec.location_id),
+           (select lp.display_name from public.profiles lp where lp.id = rec.created_by),
+           (select lp.phone from public.profiles lp where lp.id = rec.created_by);
 end;
 $$;
 
@@ -190,7 +195,13 @@ create or replace function public.join_with_invite_code(
   p_display_name text,
   p_voice_part public.voice_part default null
 )
-returns table (profile_id uuid, location_id uuid, status public.membership_status)
+returns table (
+  profile_id uuid,
+  location_id uuid,
+  status public.membership_status,
+  leader_name text,
+  leader_phone text
+)
 language plpgsql
 volatile
 security definer
@@ -245,7 +256,9 @@ begin
 
   return query
     select v_uid, rec.location_id,
-           (select p.status from public.profiles p where p.id = v_uid);
+           (select p.status from public.profiles p where p.id = v_uid),
+           (select lp.display_name from public.profiles lp where lp.id = rec.created_by),
+           (select lp.phone from public.profiles lp where lp.id = rec.created_by);
 end;
 $$;
 

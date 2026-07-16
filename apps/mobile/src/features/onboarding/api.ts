@@ -10,7 +10,10 @@ export type MembershipStatus = 'pending' | 'approved' | 'declined';
 /** null status = authenticated but no profile yet (invite step not done). */
 export type MembershipState = { status: MembershipStatus | null };
 
-export type ValidatedInvite = { locationId: string; locationName: string };
+/** Where to reach the location leader — powers the pending-screen fallback. */
+export type LeaderContact = { leaderName: string | null; leaderPhone: string | null };
+
+export type ValidatedInvite = LeaderContact & { locationId: string; locationName: string };
 
 // ── auth (phone OTP) ─────────────────────────────────────────────────────────
 
@@ -39,25 +42,42 @@ export function useVerifyOtp() {
 
 // ── invite codes ─────────────────────────────────────────────────────────────
 
+type InviteRow = {
+  location_id: string;
+  location_name: string;
+  leader_name: string | null;
+  leader_phone: string | null;
+};
+
 async function validateInviteCode(code: string): Promise<ValidatedInvite> {
   const { data, error } = await supabase.rpc('validate_invite_code', { p_code: code });
   if (error) throw error;
-  const row = (data as { location_id: string; location_name: string }[] | null)?.[0];
+  const row = (data as InviteRow[] | null)?.[0];
   if (!row) throw new Error('INVITE_INVALID');
-  return { locationId: row.location_id, locationName: row.location_name };
+  return {
+    locationId: row.location_id,
+    locationName: row.location_name,
+    leaderName: row.leader_name,
+    leaderPhone: row.leader_phone,
+  };
 }
 
 export type JoinInput = { code: string; displayName: string; voicePart: VocalPart | null };
+export type JoinResult = LeaderContact & { status: MembershipStatus };
 
-async function joinWithInviteCode(input: JoinInput): Promise<MembershipStatus> {
+async function joinWithInviteCode(input: JoinInput): Promise<JoinResult> {
   const { data, error } = await supabase.rpc('join_with_invite_code', {
     p_code: input.code,
     p_display_name: input.displayName,
     p_voice_part: input.voicePart,
   });
   if (error) throw error;
-  const row = (data as { status: MembershipStatus }[] | null)?.[0];
-  return row?.status ?? 'pending';
+  const row = (data as (InviteRow & { status: MembershipStatus })[] | null)?.[0];
+  return {
+    status: row?.status ?? 'pending',
+    leaderName: row?.leader_name ?? null,
+    leaderPhone: row?.leader_phone ?? null,
+  };
 }
 
 export function useValidateInviteCode() {
@@ -68,7 +88,8 @@ export function useJoinWithInviteCode() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: JoinInput) => joinWithInviteCode(input),
-    onSuccess: (status) => qc.setQueryData(['membership'], { status } satisfies MembershipState),
+    onSuccess: (result) =>
+      qc.setQueryData(['membership'], { status: result.status } satisfies MembershipState),
   });
 }
 
