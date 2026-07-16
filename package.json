@@ -11,6 +11,8 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "test": "npm run test --workspaces --if-present",
+    "test:rls": "supabase test db",
+    "db:reset": "supabase db reset",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
