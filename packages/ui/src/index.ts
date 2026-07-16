@@ -13,3 +13,5 @@ export {
   motion,
 } from './tokens';
 export type { Tokens, Category, TypographyVariant } from './tokens';
+export { useAppFonts } from './fonts';
+export { springStiff, springFluid, glideOut, useMotion, useGlideOut } from './motion';
