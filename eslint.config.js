@@ -15,6 +15,16 @@ module.exports = [
     ],
   },
   ...expoConfig,
+  // Resolve the mobile app's `@/*` tsconfig path alias for import/* rules.
+  {
+    files: ['apps/mobile/**/*.{js,jsx,ts,tsx}'],
+    settings: {
+      'import/resolver': {
+        typescript: { project: 'apps/mobile/tsconfig.json' },
+        node: { extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'] },
+      },
+    },
+  },
   // Design System rule: no raw colors or px values outside tokens.ts
   {
     files: ['apps/mobile/src/**/*.{js,jsx,ts,tsx}', 'packages/ui/src/**/*.{js,jsx,ts,tsx}'],
