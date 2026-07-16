@@ -12,3 +12,5 @@ export { OfflinePill } from './OfflinePill';
 export type { OfflinePillProps } from './OfflinePill';
 export { Avatar } from './Avatar';
 export type { AvatarProps, AvatarSize } from './Avatar';
+export { Card } from './Card';
+export type { CardProps } from './Card';
