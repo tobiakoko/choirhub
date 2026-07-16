@@ -20,3 +20,5 @@ export { GhostButton } from './GhostButton';
 export type { GhostButtonProps } from './GhostButton';
 export { FAB } from './FAB';
 export type { FABProps } from './FAB';
+export { Sheet } from './Sheet';
+export type { SheetProps } from './Sheet';
