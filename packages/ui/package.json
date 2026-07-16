@@ -7,7 +7,19 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@expo-google-fonts/plus-jakarta-sans": "^0.4.2"
+  },
+  "peerDependencies": {
+    "@gorhom/bottom-sheet": "*",
+    "expo-font": "*",
+    "expo-linear-gradient": "*",
+    "react": "*",
+    "react-native": "*",
+    "react-native-reanimated": "*"
+  },
   "devDependencies": {
+    "@types/react": "~19.2.2",
     "typescript": "~6.0.3"
   }
 }
