@@ -132,3 +132,11 @@ insert into public.campaign_status (campaign_id, profile_id, status, marked_by, 
   ('c1000000-0000-0000-0000-000000000001', 'a2000000-0000-0000-0000-000000000006', 'pending',  null, gen_random_uuid()),
   ('c1000000-0000-0000-0000-000000000001', 'a2000000-0000-0000-0000-000000000007', 'pending',  null, gen_random_uuid()),
   ('c1000000-0000-0000-0000-000000000001', 'a2000000-0000-0000-0000-000000000008', 'pending',  null, gen_random_uuid());
+
+-- Onboarding invite codes (§5). One live code per location for manual QA, plus a
+-- pre-expired DC code to exercise the recoverable "wrong code" error path. Codes
+-- are stored upper-case; the app upper-cases what the member types.
+insert into public.invite_codes (code, location_id, created_by, expires_at, max_uses, uses) values
+  ('DCWELCOME',  '20000000-0000-0000-0000-0000000000dc', 'd1000000-0000-0000-0000-000000000001', now() + interval '30 days', 50, 0),
+  ('DALLAS2026', '20000000-0000-0000-0000-0000000000da', 'd2000000-0000-0000-0000-000000000001', now() + interval '30 days', 50, 0),
+  ('DCEXPIRED',  '20000000-0000-0000-0000-0000000000dc', 'd1000000-0000-0000-0000-000000000001', now() - interval '1 day',  50, 0);
