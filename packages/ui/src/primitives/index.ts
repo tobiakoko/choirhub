@@ -22,3 +22,7 @@ export { FAB } from './FAB';
 export type { FABProps } from './FAB';
 export { Sheet } from './Sheet';
 export type { SheetProps } from './Sheet';
+export { TextField } from './TextField';
+export type { TextFieldProps } from './TextField';
+export { SelectableOption } from './SelectableOption';
+export type { SelectableOptionProps } from './SelectableOption';
