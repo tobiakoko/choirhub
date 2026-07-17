@@ -1,0 +1,11 @@
+-- 0011_announcement_important_priority.sql
+-- Adds the 'important' delivery tier to announcement_priority (§6.3 notifications:
+-- Critical → high push + SMS fallback · Important → standard push · Normal →
+-- silent daily digest). The compose Delivery step (§ leader UI) offers all three;
+-- until now the enum only modelled normal/critical, so "Important" had nowhere to
+-- land. Ordered between normal and critical so priority comparisons stay monotonic.
+--
+-- Kept in its own migration: ALTER TYPE ... ADD VALUE cannot have its new label
+-- used in the same transaction, so isolating it keeps 0012 free to reference the
+-- full enum. Append-only (rule #6) — the enum is only extended, never edited.
+alter type public.announcement_priority add value if not exists 'important' before 'critical';
