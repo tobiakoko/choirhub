@@ -137,6 +137,12 @@ export const size = {
   categoryStripe: 4,
   sheetHandleWidth: 32,
   sheetHandleHeight: 4,
+  // Repertoire audio player (§7.2): circular gradient play control + cyan
+  // progress track, plus the lyrics-sheet text-scale slider (§2.3).
+  playButton: 56,
+  progressTrackHeight: 6,
+  progressMarkerWidth: 2,
+  sliderThumb: 24,
 } as const;
 
 export const borderWidth = {

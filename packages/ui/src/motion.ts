@@ -25,6 +25,22 @@ export const glideOut = {
 } as const;
 
 /**
+ * A gorhom-agnostic descriptor of how a bottom sheet should present: `spring-fluid`
+ * physics normally (design system §7.4), degraded to a short timing curve when the
+ * OS Reduce Motion setting is on — so the sheet still animates but never over-
+ * shoots. Pure and side-effect-free so it can be asserted in tests; `Sheet` maps
+ * it onto the matching gorhom config hook.
+ */
+export type SheetMotion =
+  ({ type: 'spring' } & WithSpringConfig) | { type: 'timing'; duration: number };
+
+export function sheetAnimationConfigs(reducedMotion: boolean): SheetMotion {
+  return reducedMotion
+    ? { type: 'timing', duration: motion.reducedMotionMs }
+    : { type: 'spring', ...springFluid };
+}
+
+/**
  * Reduced-motion-aware animation helpers. When the OS Reduce Motion setting
  * is on, every spring degrades to a 120ms fade-style timing curve — state
  * changes still animate, nothing snaps.
