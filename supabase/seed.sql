@@ -112,11 +112,20 @@ insert into public.rsvps (event_id, profile_id, status, client_uuid) values
 insert into public.songs (id, region_id, title, composer, song_key, tempo, tags) values
   ('50000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'Great Is Thy Faithfulness', 'W. M. Runyan', 'D', 72, '{hymn,convention}');
 
+-- part_audio renditions carry the object form `{url, bytes, durationSec}` per
+-- rendition key so the app can state each download's size explicitly (§6.2). The
+-- client caches Opus on cellular / AAC on Wi-Fi and never evicts the text below.
 insert into public.song_assets (song_id, asset_type, voice_part, content, storage_path, renditions) values
   ('50000000-0000-0000-0000-000000000001', 'lyrics', null, 'Great is thy faithfulness, O God my Father...', null, '{}'::jsonb),
-  ('50000000-0000-0000-0000-000000000001', 'solfa',  null, 'd r m f | s f m r | d ...', null, '{}'::jsonb),
+  ('50000000-0000-0000-0000-000000000001', 'solfa',  null, 'd  r  m  f | s  f  m  r | d  -  -  -', null, '{}'::jsonb),
   ('50000000-0000-0000-0000-000000000001', 'part_audio', 'soprano', null, 'songs/50000000/soprano.opus',
-     '{"opus_24k":"https://cdn.example.org/songs/50000000/soprano.opus"}'::jsonb);
+     '{"opus_24k":{"url":"https://cdn.example.org/songs/50000000/soprano.opus","bytes":735000,"durationSec":245},"aac_96k":{"url":"https://cdn.example.org/songs/50000000/soprano.m4a","bytes":2940000,"durationSec":245}}'::jsonb),
+  ('50000000-0000-0000-0000-000000000001', 'part_audio', 'alto', null, 'songs/50000000/alto.opus',
+     '{"opus_24k":{"url":"https://cdn.example.org/songs/50000000/alto.opus","bytes":735000,"durationSec":245},"aac_96k":{"url":"https://cdn.example.org/songs/50000000/alto.m4a","bytes":2940000,"durationSec":245}}'::jsonb),
+  ('50000000-0000-0000-0000-000000000001', 'part_audio', 'tenor', null, 'songs/50000000/tenor.opus',
+     '{"opus_24k":{"url":"https://cdn.example.org/songs/50000000/tenor.opus","bytes":735000,"durationSec":245},"aac_96k":{"url":"https://cdn.example.org/songs/50000000/tenor.m4a","bytes":2940000,"durationSec":245}}'::jsonb),
+  ('50000000-0000-0000-0000-000000000001', 'part_audio', 'bass', null, 'songs/50000000/bass.opus',
+     '{"opus_24k":{"url":"https://cdn.example.org/songs/50000000/bass.opus","bytes":735000,"durationSec":245},"aac_96k":{"url":"https://cdn.example.org/songs/50000000/bass.m4a","bytes":2940000,"durationSec":245}}'::jsonb);
 
 -- A region-wide payment campaign with per-member status (the compliance board).
 insert into public.campaigns (id, region_id, location_id, group_id, created_by, type, title, amount_cents, deadline) values

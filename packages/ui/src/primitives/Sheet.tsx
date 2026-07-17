@@ -2,14 +2,18 @@ import {
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
   BottomSheetModal,
+  BottomSheetScrollView,
   BottomSheetView,
+  useBottomSheetSpringConfigs,
+  useBottomSheetTimingConfigs,
 } from '@gorhom/bottom-sheet';
 import { useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 
 import { springFluid } from '../motion';
-import { color, elevation, opacity, radii, size, spacing } from '../tokens';
+import { color, elevation, motion, opacity, radii, size, spacing } from '../tokens';
 
 export type SheetProps = {
   visible: boolean;
@@ -17,6 +21,9 @@ export type SheetProps = {
   children: ReactNode;
   /** Optional fixed snap points; omit to size to content (dynamic sizing). */
   snapPoints?: (string | number)[];
+  /** Render the body in a scroll view — for long content like lyrics/solfa that
+   *  can exceed the sheet height. Pair with a fixed `snapPoints`. */
+  scrollable?: boolean;
   accessibilityLabel?: string;
 };
 
@@ -28,8 +35,23 @@ export type SheetProps = {
  *
  * Requires <BottomSheetModalProvider> above it in the tree.
  */
-export function Sheet({ visible, onClose, children, snapPoints, accessibilityLabel }: SheetProps) {
+export function Sheet({
+  visible,
+  onClose,
+  children,
+  snapPoints,
+  scrollable,
+  accessibilityLabel,
+}: SheetProps) {
   const ref = useRef<BottomSheetModal>(null);
+
+  // Slide up via spring-fluid, degrading to a short fade-timing under OS Reduce
+  // Motion (design system §7.4, motion §"reduced-motion"). Both config hooks run
+  // unconditionally — hooks can't be gated — and we pick per the setting.
+  const reducedMotion = useReducedMotion();
+  const springConfigs = useBottomSheetSpringConfigs(springFluid);
+  const timingConfigs = useBottomSheetTimingConfigs({ duration: motion.reducedMotionMs });
+  const animationConfigs = reducedMotion ? timingConfigs : springConfigs;
 
   useEffect(() => {
     if (visible) {
@@ -59,16 +81,30 @@ export function Sheet({ visible, onClose, children, snapPoints, accessibilityLab
       snapPoints={snapPoints}
       enableDynamicSizing={!snapPoints}
       onDismiss={onClose}
-      animationConfigs={springFluid}
+      animationConfigs={animationConfigs}
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.background}
       handleIndicatorStyle={styles.handleIndicator}
       handleStyle={styles.handle}
       style={styles.sheet}
     >
-      <BottomSheetView accessibilityViewIsModal accessibilityLabel={accessibilityLabel} style={styles.content}>
-        {children}
-      </BottomSheetView>
+      {scrollable ? (
+        <BottomSheetScrollView
+          accessibilityViewIsModal
+          accessibilityLabel={accessibilityLabel}
+          contentContainerStyle={styles.content}
+        >
+          {children}
+        </BottomSheetScrollView>
+      ) : (
+        <BottomSheetView
+          accessibilityViewIsModal
+          accessibilityLabel={accessibilityLabel}
+          style={styles.content}
+        >
+          {children}
+        </BottomSheetView>
+      )}
     </BottomSheetModal>
   );
 }
