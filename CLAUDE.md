@@ -59,6 +59,9 @@ docs/                 system design, ADRs, this build plan
 - TypeScript strict; no `any` without a `// why:` comment
 - Feature-folder structure (`features/feed`, `features/songs`…); shared
   primitives only in `packages/ui`
+- Cross-feature imports use deep paths (`@/features/feed/useViewer`), not the
+  feature barrel, so two features that reference each other don't form an
+  index↔index import cycle (e.g. feed's FAB slot ↔ leader compose).
 - Components: function declarations, props typed inline or `XProps`
 - Commits: conventional (`feat:`, `fix:`, `chore:`) — one logical change per
   commit; commit at every green checkpoint
