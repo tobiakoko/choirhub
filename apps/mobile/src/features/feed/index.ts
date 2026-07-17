@@ -5,4 +5,5 @@ export { useFeed } from './useFeed';
 export type { UseFeed, UseFeedParams } from './useFeed';
 export { useAck } from './useAck';
 export { useViewer } from './useViewer';
+export { useFeedSync } from './useFeedSync';
 export * from './components';

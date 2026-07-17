@@ -12,7 +12,6 @@ import { FeedList } from './components/FeedList';
 import type { CategoryFilter } from './feedModel';
 import { useAck } from './useAck';
 import { useFeed } from './useFeed';
-import { useFeedSync } from './useFeedSync';
 import { useViewer } from './useViewer';
 
 /**
@@ -25,8 +24,6 @@ import { useViewer } from './useViewer';
 export function FeedScreen() {
   const { session } = useSession();
   const profileId = session?.user.id;
-
-  useFeedSync(profileId);
 
   const { resolved } = useViewer();
   const sync = useSyncStatus();
