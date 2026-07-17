@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useSyncStatus } from '@/data/sync';
+import { LeaderFab } from '@/features/leader';
 import { useSession } from '@/features/onboarding/api';
 
 import { CategoryFilterChips } from './components/CategoryFilterChips';
@@ -63,6 +64,8 @@ export function FeedScreen() {
           ListHeaderComponent={header}
         />
       </View>
+      {/* Role-gated: renders only for content-authoring roles (§5). */}
+      <LeaderFab />
     </SafeAreaView>
   );
 }

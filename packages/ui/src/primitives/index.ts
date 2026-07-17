@@ -26,3 +26,5 @@ export { TextField } from './TextField';
 export type { TextFieldProps } from './TextField';
 export { SelectableOption } from './SelectableOption';
 export type { SelectableOptionProps } from './SelectableOption';
+export { ProgressBar } from './ProgressBar';
+export type { ProgressBarProps, ProgressBarVariant } from './ProgressBar';

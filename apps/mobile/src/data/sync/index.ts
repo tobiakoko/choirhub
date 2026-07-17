@@ -17,6 +17,8 @@ export type { UseSyncStatus } from './useSyncStatus';
 export type {
   MutationType,
   MutationPayload,
+  CampaignState,
+  RsvpStatus,
   OutboxRecord,
   PushMutation,
   PushResult,
