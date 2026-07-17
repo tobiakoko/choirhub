@@ -21,7 +21,7 @@ export { resolvePlaybackSource, type PlaybackSource, type ResolveInput } from '.
 export { formatBytes, formatClock } from './format';
 export { getNetworkType, isOnline } from './networkInfo';
 export { isCharging } from './deviceState';
-export { fileSystemStore } from './fileSystemStore';
+export { fileSystemStore, mediaCacheSize, clearMediaCache } from './fileSystemStore';
 export {
   createMediaCacheManager,
   createMemoryCacheIndex,

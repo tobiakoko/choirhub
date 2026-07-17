@@ -86,3 +86,23 @@ async function remove(key: string): Promise<void> {
 }
 
 export const fileSystemStore: MediaStore = { uriFor, info, download, remove };
+
+/** Total bytes of cached renditions on disk — backs the storage manager (§ settings). */
+export async function mediaCacheSize(): Promise<number> {
+  const dir = await FileSystem.getInfoAsync(MEDIA_DIR);
+  if (!dir.exists) return 0;
+  const names = await FileSystem.readDirectoryAsync(MEDIA_DIR);
+  let total = 0;
+  for (const name of names) {
+    const file = await FileSystem.getInfoAsync(`${MEDIA_DIR}${name}`);
+    if (file.exists && !file.isDirectory) total += file.size;
+  }
+  return total;
+}
+
+/** Delete every cached rendition (member-initiated "clear cache"). Text stays in
+ *  WatermelonDB — only the media directory is wiped, then recreated empty. */
+export async function clearMediaCache(): Promise<void> {
+  await FileSystem.deleteAsync(MEDIA_DIR, { idempotent: true });
+  await ensureDir();
+}
