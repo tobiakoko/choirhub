@@ -40,6 +40,13 @@ async function publishAnnouncement(input: PublishInput, authorId: string): Promi
     if (audienceError) throw audienceError;
   }
 
+  // Kick the fan-out edge function so targeted members are notified by priority
+  // tier (§6.3). Fire-and-forget: delivery must never block or fail the publish —
+  // the announcement is already durably stored and RLS-scoped.
+  void supabase.functions
+    .invoke('notify', { body: { announcement_id: announcementId } })
+    .catch(() => undefined);
+
   // Pull the fresh row into the local mirror so the author sees their own post.
   void getSyncEngine().sync('manual');
   return announcementId;

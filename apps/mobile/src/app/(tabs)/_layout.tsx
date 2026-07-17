@@ -2,6 +2,7 @@ import { tokens } from '@choirhub/ui';
 import { Tabs } from 'expo-router';
 import { useEffect } from 'react';
 
+import { useNotifications } from '@/data/notifications';
 import { useFeedSync } from '@/features/feed';
 import { registerRehearsalPackPrefetch } from '@/features/songs';
 import { useSession } from '@/features/onboarding/api';
@@ -9,11 +10,13 @@ import { useSession } from '@/features/onboarding/api';
 /**
  * The app shell members land in after approval. Boots the sync engine here (not in
  * a single screen) so pulls and queued writes work no matter which tab opens first.
- * Home · Schedule · Songs exist today; More arrives with that feature.
+ * Home · Schedule · Songs · More.
  */
 export default function TabsLayout() {
   const { session } = useSession();
   useFeedSync(session?.user.id);
+  // Register push token + channels and route notification taps (§6.3).
+  useNotifications(session?.user.id);
 
   // Define the rehearsal-pack prefetch task once for the session (§6.2). It only
   // runs on Wi-Fi + charging, so registering it early is harmless.
