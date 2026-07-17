@@ -36,11 +36,11 @@ export default function More() {
           />
         ) : null}
 
-        {!capabilities.canCompose && !capabilities.canManageMembers ? (
-          <AppText variant="bodyMd" color={tokens.color.inkSecondary}>
-            Your account settings will appear here.
-          </AppText>
-        ) : null}
+        <NavRow
+          title="Settings"
+          subtitle="Notifications, data saver, storage, and language"
+          onPress={() => router.push('/settings')}
+        />
       </ScrollView>
     </SafeAreaView>
   );

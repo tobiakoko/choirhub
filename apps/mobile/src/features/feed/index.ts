@@ -1,6 +1,7 @@
 // Public surface of the feed feature.
 
 export { FeedScreen } from './FeedScreen';
+export { AnnouncementDetailScreen } from './AnnouncementDetailScreen';
 export { useFeed } from './useFeed';
 export type { UseFeed, UseFeedParams } from './useFeed';
 export { useAck } from './useAck';
