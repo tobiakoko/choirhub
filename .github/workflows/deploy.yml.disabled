@@ -1,0 +1,100 @@
+# DISABLED until the Expo deployment pipeline exists.
+# This workflow requires eas.json, a `runtimeVersion` in app config, and an
+# EXPO_TOKEN secret (see docs/devops.md §3). None of those exist yet, so the
+# `.disabled` extension keeps GitHub from registering it as a workflow.
+# To enable: add the EAS config + EXPO_TOKEN, then rename this file to
+# `deploy.yml`.
+#
+# Two shipping paths, and confusing them is the #1 Expo footgun:
+#   JS/asset change  → `eas update`  → live in minutes, no store review
+#   Native change    → `eas build`   → store submission, days
+# A native change shipped as an OTA update = a crash loop on every device.
+# The `native-guard` job below exists to stop exactly that.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Update channel
+        type: choice
+        options: [preview, production]
+        default: preview
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false   # never cancel a deploy mid-flight
+
+permissions:
+  contents: read
+
+jobs:
+  native-guard:
+    runs-on: ubuntu-latest
+    outputs:
+      native: ${{ steps.check.outputs.native }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: check
+        name: Did anything native change?
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          if echo "$CHANGED" | grep -qE 'app\.(json|config\.[jt]s)$|package\.json$|eas\.json$|android/|ios/'; then
+            echo "native=true" >> $GITHUB_OUTPUT
+            echo "::warning::Native-affecting files changed. OTA update will NOT deliver this — a new store build is required."
+          else
+            echo "native=false" >> $GITHUB_OUTPUT
+          fi
+
+  ota:
+    needs: native-guard
+    if: needs.native-guard.outputs.native == 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+
+      # Never ship an update that hasn't passed the gates.
+      - run: npm run typecheck && npm run lint && npm test
+
+      - name: Publish OTA update
+        run: |
+          eas update \
+            --branch ${{ inputs.channel || 'preview' }} \
+            --message "${{ github.event.head_commit.message }}" \
+            --non-interactive
+      - name: Summary
+        run: |
+          echo "### 🚀 OTA update published to \`${{ inputs.channel || 'preview' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "Members receive it on next app launch. Rollback: \`eas update:rollback\`" >> $GITHUB_STEP_SUMMARY
+
+  build-required:
+    needs: native-guard
+    if: needs.native-guard.outputs.native == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain
+        run: |
+          echo "### 📱 Store build required" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Native-affecting files changed, so this cannot ship over-the-air." >> $GITHUB_STEP_SUMMARY
+          echo "Run manually when ready:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo 'eas build --profile production --platform all' >> $GITHUB_STEP_SUMMARY
+          echo 'eas submit --profile production --platform all' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ Members on the old binary keep receiving OTA updates for the *previous* runtime version. Do not break the sync API contract in the same release." >> $GITHUB_STEP_SUMMARY

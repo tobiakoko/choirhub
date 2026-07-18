@@ -5,26 +5,129 @@ on:
   push:
     branches: [main]
 
+# Cancel superseded runs on the same branch — saves free-tier minutes and
+# stops you waiting on results for a commit you already replaced.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
-  checks:
-    name: typecheck · lint · test
+  # Detect what actually changed so doc-only PRs don't burn 5 minutes of CI.
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      db: ${{ steps.filter.outputs.db }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'apps/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'tsconfig*.json'
+              - '.github/workflows/ci.yml'
+            db:
+              - 'supabase/**'
+
+  verify:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: npm
 
-      - name: Install dependencies
+      - name: Install
         run: npm ci
 
+      # Run all three even if one fails — you want the full list of problems
+      # in one CI run, not one-at-a-time whack-a-mole.
       - name: Typecheck
+        id: typecheck
         run: npm run typecheck
+        continue-on-error: true
 
       - name: Lint
+        id: lint
         run: npm run lint
+        continue-on-error: true
 
       - name: Test
-        run: npm test
+        id: test
+        run: npm test -- --ci --coverage
+        continue-on-error: true
+
+      - name: Report
+        if: always()
+        run: |
+          fail=0
+          [ "${{ steps.typecheck.outcome }}" = "failure" ] && echo "::error::typecheck failed" && fail=1
+          [ "${{ steps.lint.outcome }}"      = "failure" ] && echo "::error::lint failed" && fail=1
+          [ "${{ steps.test.outcome }}"      = "failure" ] && echo "::error::tests failed" && fail=1
+          exit $fail
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  # Expo config must stay valid — catches a broken app.json/plugin before
+  # you find out at build time.
+  expo-doctor:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Expo doctor
+        working-directory: apps/mobile
+        run: npx expo-doctor
+
+  # Guard the performance budget from docs/choirhub-system-design-v2.md §7.
+  bundle-budget:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Export bundle
+        working-directory: apps/mobile
+        run: npx expo export --platform android --output-dir dist
+      - name: Check size against budget (4MB)
+        working-directory: apps/mobile
+        run: |
+          BYTES=$(find dist -name '*.hbc' -o -name '*.js' | xargs cat | wc -c)
+          MB=$(echo "scale=2; $BYTES/1048576" | bc)
+          echo "JS bundle: ${MB}MB (budget 4MB)"
+          echo "### 📦 JS bundle: ${MB}MB / 4MB budget" >> $GITHUB_STEP_SUMMARY
+          if [ "$BYTES" -gt 4194304 ]; then
+            echo "::error::Bundle ${MB}MB exceeds the 4MB budget. Justify or trim."
+            exit 1
+          fi
