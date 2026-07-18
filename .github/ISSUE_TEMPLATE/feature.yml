@@ -1,0 +1,61 @@
+name: Feature request
+description: Suggest something the app should do
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas welcome. The most useful requests describe the problem a real
+        chorister or leader has, not just the solution — that leaves room for a
+        simpler fix.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: Who is stuck, and on what? What can't they do today?
+      placeholder: Leaders can't tell at a glance who hasn't acknowledged this week's uniform.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you'd like to happen
+      placeholder: A count of unacknowledged members on the announcement, tappable to see who.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: who
+    attributes:
+      label: Who is this for?
+      options:
+        - Members
+        - Section leaders
+        - Choir / location leaders
+        - Regional / admin
+        - Everyone
+    validations:
+      required: true
+
+  - type: dropdown
+    id: offline
+    attributes:
+      label: Does it need to work offline?
+      description: Offline is a mode, not an error — most things should.
+      options:
+        - Yes — must work with no signal
+        - Mostly — read offline, sync the write later
+        - No — online-only is acceptable
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives / workarounds
+      description: How do people cope today (WhatsApp, paper, calling around)?
+    validations:
+      required: false

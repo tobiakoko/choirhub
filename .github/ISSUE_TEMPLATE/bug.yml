@@ -1,0 +1,82 @@
+name: Bug report
+description: Something in the app is broken or behaving wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. The details below turn "the app is broken" into
+        something reproducible. Please don't paste real phone numbers or member
+        names — scrub them first.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you see, and what did you expect instead?
+      placeholder: I tapped "Fill form" and the screen stayed blank.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Rehearsals
+        2. Tap this week's rehearsal
+        3. Tap RSVP → Yes
+    validations:
+      required: true
+
+  - type: dropdown
+    id: role
+    attributes:
+      label: Your role
+      description: Permissions differ by role, so this narrows down RLS/UI paths fast.
+      options:
+        - Member
+        - Section leader
+        - Choir / location leader
+        - Regional / admin
+    validations:
+      required: true
+
+  - type: dropdown
+    id: network
+    attributes:
+      label: Network state when it happened
+      description: ChoirHub is offline-first — this separates a sync bug from a UI bug.
+      options:
+        - Online (WiFi / good signal)
+        - Online (slow 2G/3G)
+        - Offline (airplane mode / no signal)
+        - Went offline→online during the action
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device & OS
+      placeholder: e.g. iPhone 12 / iOS 17.4, or Tecno Spark / Android 11
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App version / update ID
+      description: Settings → About, if available. Helps pin down which OTA introduced it.
+      placeholder: e.g. 0.1.0 (update abc123)
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots or screen recordings help a lot.
+    validations:
+      required: false

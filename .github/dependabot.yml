@@ -1,0 +1,53 @@
+# Grouped, weekly dependency updates. Grouping matters as much as the updates:
+# a flood of one-PR-per-dependency trains you to ignore all of them
+# (docs/devops.md §1). One batched PR a week is reviewable.
+version: 2
+updates:
+  # JS/TS dependencies across the npm workspace (root, apps/mobile, packages/ui).
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      # Expo + React Native move together; a piecemeal bump usually breaks.
+      expo:
+        patterns:
+          - 'expo'
+          - 'expo-*'
+          - '@expo/*'
+          - 'react'
+          - 'react-dom'
+          - 'react-native'
+          - 'react-native-*'
+      # Everything else, split by risk so a patch flood stays one PR.
+      production-minor-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      dev-minor-patch:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+
+  # Keep the GitHub Actions in .github/workflows pinned and current.
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns:
+          - '*'

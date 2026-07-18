@@ -1,0 +1,18 @@
+# Code owners for ChoirHub.
+#
+# Solo today, so this is mostly a no-op — but it becomes the safety net the day
+# a second contributor appears: the high-stakes paths below will auto-request
+# review on any PR that touches them. See docs/devops.md §1.
+
+# Default owner for everything.
+*                               @tobiakoko
+
+# Security boundary — every table's RLS policies and their pgTAP tests.
+/supabase/migrations/           @tobiakoko
+/supabase/tests/                @tobiakoko
+
+# Design system — the single source of truth for all visual values.
+/packages/ui/src/tokens.ts      @tobiakoko
+
+# CI/CD and repo automation.
+/.github/                       @tobiakoko
