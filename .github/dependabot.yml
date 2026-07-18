@@ -1,53 +1,35 @@
-# Grouped, weekly dependency updates. Grouping matters as much as the updates:
-# a flood of one-PR-per-dependency trains you to ignore all of them
-# (docs/devops.md §1). One batched PR a week is reviewable.
+# Grouped weekly PRs, not a daily flood of 12 individual ones. A solo
+# maintainer ignores noise; a maintainer with one batched PR per week reviews it.
 version: 2
 updates:
-  # JS/TS dependencies across the npm workspace (root, apps/mobile, packages/ui).
   - package-ecosystem: npm
-    directory: '/'
+    directory: /
     schedule:
       interval: weekly
       day: monday
-      time: '06:00'
     open-pull-requests-limit: 5
+    groups:
+      expo:
+        patterns: ["expo", "expo-*", "@expo/*", "react-native*"]
+      supabase:
+        patterns: ["@supabase/*"]
+      dev-dependencies:
+        dependency-type: development
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      # Expo SDK upgrades are coordinated, deliberate events — never automatic.
+      - dependency-name: "expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: chore
       include: scope
-    groups:
-      # Expo + React Native move together; a piecemeal bump usually breaks.
-      expo:
-        patterns:
-          - 'expo'
-          - 'expo-*'
-          - '@expo/*'
-          - 'react'
-          - 'react-dom'
-          - 'react-native'
-          - 'react-native-*'
-      # Everything else, split by risk so a patch flood stays one PR.
-      production-minor-patch:
-        dependency-type: production
-        update-types:
-          - minor
-          - patch
-      dev-minor-patch:
-        dependency-type: development
-        update-types:
-          - minor
-          - patch
 
-  # Keep the GitHub Actions in .github/workflows pinned and current.
   - package-ecosystem: github-actions
-    directory: '/'
+    directory: /
     schedule:
-      interval: weekly
-      day: monday
-      time: '06:00'
-    open-pull-requests-limit: 5
+      interval: monthly
     commit-message:
-      prefix: ci
-    groups:
-      actions:
-        patterns:
-          - '*'
+      prefix: chore

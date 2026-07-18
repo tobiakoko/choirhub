@@ -1,61 +1,30 @@
 name: Feature request
-description: Suggest something the app should do
-labels: [enhancement]
+description: Propose a change
+labels: [enhancement, triage]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Ideas welcome. The most useful requests describe the problem a real
-        chorister or leader has, not just the solution — that leaves room for a
-        simpler fix.
-
   - type: textarea
     id: problem
     attributes:
-      label: The problem
-      description: Who is stuck, and on what? What can't they do today?
-      placeholder: Leaders can't tell at a glance who hasn't acknowledged this week's uniform.
-    validations:
-      required: true
-
-  - type: textarea
-    id: proposal
-    attributes:
-      label: What you'd like to happen
-      placeholder: A count of unacknowledged members on the announcement, tappable to see who.
-    validations:
-      required: true
-
+      label: What problem does this solve?
+      description: Describe the real situation — ideally one you saw in the WhatsApp group or at rehearsal. Not the solution yet.
+    validations: { required: true }
   - type: dropdown
     id: who
     attributes:
-      label: Who is this for?
-      options:
-        - Members
-        - Section leaders
-        - Choir / location leaders
-        - Regional / admin
-        - Everyone
-    validations:
-      required: true
-
-  - type: dropdown
-    id: offline
-    attributes:
-      label: Does it need to work offline?
-      description: Offline is a mode, not an error — most things should.
-      options:
-        - Yes — must work with no signal
-        - Mostly — read offline, sync the write later
-        - No — online-only is acceptable
-        - Not sure
-    validations:
-      required: true
-
+      label: Who benefits?
+      multiple: true
+      options: [Members, Location leaders, Regional coordinator, Music director, Everyone]
+    validations: { required: true }
   - type: textarea
-    id: alternatives
+    id: proposal
     attributes:
-      label: Alternatives / workarounds
-      description: How do people cope today (WhatsApp, paper, calling around)?
-    validations:
-      required: false
+      label: Proposed solution
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraint check
+      options:
+        - label: Works offline, or degrades gracefully without a connection
+        - label: Doesn't require members to learn new concepts (grandma-proof)
+        - label: Respects the scoped permission model — no new way to over-broadcast
+        - label: Doesn't add significant data cost for members on metered plans
