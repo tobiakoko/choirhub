@@ -1,0 +1,14 @@
+# Solo today, but this becomes your safety net the moment a second
+# contributor appears — and it documents which areas are high-stakes.
+*                       @tobiakoko
+
+# Security-critical: permissions live here.
+/supabase/migrations/   @tobiakoko
+/supabase/functions/    @tobiakoko
+
+# Design system: changes here ripple across every screen.
+/packages/ui/           @tobiakoko
+
+# The specs everything else is measured against.
+/docs/                  @tobiakoko
+/CLAUDE.md              @tobiakoko

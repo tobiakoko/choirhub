@@ -1,0 +1,30 @@
+name: Feature request
+description: Propose a change
+labels: [enhancement, triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the real situation — ideally one you saw in the WhatsApp group or at rehearsal. Not the solution yet.
+    validations: { required: true }
+  - type: dropdown
+    id: who
+    attributes:
+      label: Who benefits?
+      multiple: true
+      options: [Members, Location leaders, Regional coordinator, Music director, Everyone]
+    validations: { required: true }
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraint check
+      options:
+        - label: Works offline, or degrades gracefully without a connection
+        - label: Doesn't require members to learn new concepts (grandma-proof)
+        - label: Respects the scoped permission model — no new way to over-broadcast
+        - label: Doesn't add significant data cost for members on metered plans

@@ -1,0 +1,35 @@
+# Grouped weekly PRs, not a daily flood of 12 individual ones. A solo
+# maintainer ignores noise; a maintainer with one batched PR per week reviews it.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      expo:
+        patterns: ["expo", "expo-*", "@expo/*", "react-native*"]
+      supabase:
+        patterns: ["@supabase/*"]
+      dev-dependencies:
+        dependency-type: development
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      # Expo SDK upgrades are coordinated, deliberate events — never automatic.
+      - dependency-name: "expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major"]
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore

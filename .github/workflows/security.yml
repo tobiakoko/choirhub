@@ -1,0 +1,82 @@
+name: Security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly — catches newly-disclosed CVEs in deps you haven't touched.
+    - cron: '0 6 * * 1'
+
+concurrency:
+  group: sec-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # Highest-value job in this file. A Supabase service-role key committed to a
+  # public repo is a total compromise: it bypasses every RLS policy you wrote.
+  secrets:
+    name: Secret scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # scan full history, not just the diff
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deps:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Fail on high/critical only. Blocking on every low-severity advisory in
+      # a transitive dep trains you to ignore the whole check.
+      - name: npm audit
+        run: npm audit --audit-level=high
+      - name: Report all advisories to summary
+        if: always()
+        run: npm audit --json | npx --yes npm-audit-markdown >> $GITHUB_STEP_SUMMARY || true
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+      - uses: github/codeql-action/analyze@v3
+
+  # PII guard — the choir's real data is member phone numbers and names.
+  # Keeps test fixtures and seed data synthetic.
+  pii:
+    name: PII guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan for real-looking phone numbers outside .env.example
+        run: |
+          if grep -rEn '\+(1|234)[0-9]{9,11}' \
+               --include='*.ts' --include='*.tsx' --include='*.sql' --include='*.json' \
+               --exclude-dir=node_modules . \
+             | grep -v '555' | grep -v 'example'; then
+            echo "::error::Possible real phone number committed. Use +1555* test numbers."
+            exit 1
+          fi
+          echo "✅ No real phone numbers found"

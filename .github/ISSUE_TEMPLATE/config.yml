@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Architecture question
+    url: https://github.com/tobiakoko/choirhub/blob/main/docs/choirhub-system-design-v2.md
+    about: Check the system design doc first — it may already be answered.
+  - name: Design system question
+    url: https://github.com/tobiakoko/choirhub/blob/main/docs/design-system-v1.md
+    about: Tokens, components, and the do's/don'ts live here.

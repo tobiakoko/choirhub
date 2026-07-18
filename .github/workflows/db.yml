@@ -1,0 +1,79 @@
+# The security gate. ChoirHub's entire permission model lives in Postgres RLS
+# (docs/choirhub-system-design-v2.md §5). If these tests pass, a compromised
+# member account can't broadcast and a DC leader can't read Dallas's payment
+# data. If they don't run, you're trusting the client — which is not a plan.
+name: Database
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/db.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/**'
+
+concurrency:
+  group: db-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  migrations-and-rls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        run: supabase start
+
+      # Proves migrations apply to a clean database in order — catches the
+      # "works on my machine because my local DB has drifted" class of bug.
+      - name: Reset DB from migrations + seed
+        run: supabase db reset --debug
+
+      # Fails if a committed migration doesn't match the resulting schema,
+      # i.e. someone hand-edited the DB instead of writing a migration.
+      - name: Assert no schema drift
+        run: |
+          supabase db diff --schema public > /tmp/drift.sql
+          if [ -s /tmp/drift.sql ]; then
+            echo "::error::Schema drift detected — migrations don't fully describe the schema:"
+            cat /tmp/drift.sql
+            exit 1
+          fi
+
+      - name: RLS policy tests (pgTAP)
+        run: supabase test db
+
+      # Every table must have RLS ON. A table without RLS is world-readable
+      # through the anon key — the single most common Supabase breach.
+      - name: Assert RLS enabled on every public table
+        run: |
+          UNPROTECTED=$(supabase db execute --stdin <<'SQL'
+            select string_agg(tablename, ', ')
+            from pg_tables
+            where schemaname = 'public'
+              and rowsecurity = false;
+          SQL
+          )
+          if echo "$UNPROTECTED" | grep -qE '[a-z_]+'; then
+            echo "::error::Tables without RLS: $UNPROTECTED"
+            exit 1
+          fi
+          echo "✅ RLS enabled on all public tables"
+
+      - name: Supabase security advisors
+        run: supabase inspect db --linked || true
+
+      - name: Stop
+        if: always()
+        run: supabase stop
